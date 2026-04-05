@@ -12,7 +12,7 @@
 #define DIRNUM 128      //单个目录最多128个目录项
 #define DIRSIZE 14      //目录项中目录名的最大长度
 #define PWDSIZE 12      //用户密码最大长度
-#define PWDNUM 32       //用户密码表的大小
+//#define PWDNUM 32       //用户密码表的大小
 #define NOFILE 20       //每个用户最多同时打开20个文件
 #define NADDR 10        //索引节点中的直接地址项数量
 #define NHINO 128       //内存索引节点hash表大小
@@ -178,18 +178,19 @@ extern unsigned int namei();
 extern unsigned int iname();
 extern unsigned int access();
 extern void _dir();
-extern void mkdir();
-extern void chdir();
+extern void mkdir(const char *pathname);
+extern void chdir(const char *pathname);
 extern void dirlt();
-extern unsigned short open();
-extern void create();
-extern unsigned int read();
-extern unsigned int write();
-extern int login();
+extern unsigned short open(const char *pathname, uint16_t mode);
+extern unsigned short create(const char *pathname, uint16_t mode);
+extern void remove_file(const char *pathname);
+extern uint32_t read(unsigned short fd, char * buf, uint32_t count);
+extern uint32_t write(unsigned short fd, const char * buf, uint32_t count);
+extern int login(uint16_t uid, const char * pwd);
 extern void logout();
 extern void install();
 extern void format();
-extern void close();
+extern void close(unsigned short fd);
 extern void halt();
 
 #endif
