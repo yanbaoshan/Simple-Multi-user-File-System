@@ -13,7 +13,7 @@ user user_table[USERNUM]; //用户表
 std::FILE * fd = nullptr; //文件系统文件指针
 inode * cur_path_inode = nullptr; //当前路径的内存索引节点
 int user_id = 0;
-int file_block = 0;
+uint32_t file_block = 0;
 
 int main()
 {

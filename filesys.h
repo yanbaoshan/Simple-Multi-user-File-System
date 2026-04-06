@@ -165,7 +165,8 @@ extern pwd pwd_table[USERNUM];				//用户密码表
 extern user user_table[USERNUM];			//当前用户表
 extern std::FILE *fd;    /* the file system column of all the system */
 extern inode * cur_path_inode;		//当前路径的内存索引节点
-extern int user_id,file_block;
+extern int user_id;
+extern uint32_t file_block; 
 
 //函数原型声明
 extern inode * iget();
