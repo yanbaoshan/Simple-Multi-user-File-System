@@ -1,12 +1,14 @@
 #include <iostream>
+#include <cstring>
+#include <fstream>
 #include "filesys.h"
 
 //format.cpp - 实现文件系统的格式化功能
 
 void format()
 {
-    inode * inode;
-    direct dir_buf[BLOCKSIZE /(DIRSIZE + 2)];
+    inode * inop;
+    direct dir_buf[BLOCKSIZE /(DIRSIZE + sizeof(uint32_t))];
 
     struct filsys;
     uint32_t block_buf[BLOCKSIZE / sizeof(uint32_t)];
@@ -14,43 +16,45 @@ void format()
     int i,j;
 
     //creatre the file system
-    fd = std::fopen("filesystem", "r+w+b");
-    buf = new char[(DINODEBLK + FILEBLK + 2) * BLOCKSIZE * sizeof(char)];
+    size_t total_size = (DINODEBLK + FILEBLK + 2) * BLOCKSIZE;
+    buf = new char[total_size];
     if (buf == NULL)
     {
         std::cerr << "Failed to create file system." << std::endl;
-        exit(0);
+        exit(EXIT_FAILURE);
     }
+    std::fstream fs("filesystem", std::ios::out | std::ios::binary);
+    //fd = std::fopen("filesystem", "r+w+b");
     fseek(fd, 0, SEEK_SET);
     std::fwrite(buf, 1, (DINODEBLK + FILEBLK + 2) * BLOCKSIZE * sizeof(char), fd);
 
-    //0.initialize the password
+    //初始化密码表
     pwd_table[0].p_uid = 2116;
     pwd_table[0].p_gid = 03;
     std::strcpy(pwd_table[0].password, "123456");
     pwd_table[1].p_uid = 2117;
     pwd_table[1].p_gid = 03;
-    strcpy(pwd_table[1].password, "123456");
+    std::strcpy(pwd_table[1].password, "123456");
     pwd_table[2].p_uid = 2118;
     pwd_table[2].p_gid = 04;
-    strcpy(pwd_table[2].password, "123456");
+    std::strcpy(pwd_table[2].password, "123456");
     pwd_table[3].p_uid = 2119;
     pwd_table[3].p_gid = 04;
-    strcpy(pwd_table[3].password, "123456");
+    std::strcpy(pwd_table[3].password, "123456");
     pwd_table[4].p_uid = 2120;
     pwd_table[4].p_gid = 05;
-    strcpy(pwd_table[4].password, "123456");
+    std::strcpy(pwd_table[4].password, "123456");
 
-    //create the main directory and its sub dir etc and the file password
-    inode = iget(0); //0 empty dinode id
-    inode->di_number = DIEMPTY;
-    iput(inode);
+    //创建目录结构 create the main directory and its sub dir etc and the file password
+    inop = iget(0); //0 empty dinode id
+    inop->di_number = DIEMPTY;
+    iput(inop);
 
-    inode = iget(1); //1 main directory id
-    inode->di_number = 1;
-    inode->di_mode = DEFAULTMODE|DIDIR;
-    inode->di_size = 3 * (DIRSIZE + 2);
-    inode->di_addr[0] = 0; //block 0# is used by the main directory
+    inop = iget(1); //1 main directory id
+    inop->di_number = 1;
+    inop->di_mode = DEFAULTMODE|DIDIR;
+    inop->di_size = 3 * (DIRSIZE + 2);
+    inop->di_addr[0] = 0; //block 0# is used by the main directory
     strcpy(dir_buf[0].d_name, "..");
     dir_buf[0].d_ino = 1;
     strcpy(dir_buf[1].d_name, ".");
@@ -59,13 +63,13 @@ void format()
     dir_buf[2].d_ino = 2;
     fseek(fd, DATASTART, SEEK_SET);
     std::fwrite(dir_buf, 1, 3 * (DIRSIZE + 2), fd);
-    iput(inode);
+    iput(inop);
 
-    inode = iget(2); //2 etc directory id
-    inode->di_number = 1;
-    inode->di_mode = DEFAULTMODE|DIDIR;
-    inode->di_size = 3 * (DIRSIZE + 2);
-    inode->di_addr[0] = 1; //block 0# is used by the etc directory
+    inop = iget(2); //2 etc directory id
+    inop->di_number = 1;
+    inop->di_mode = DEFAULTMODE|DIDIR;
+    inop->di_size = 3 * (DIRSIZE + 2);
+    inop->di_addr[0] = 1; //block 0# is used by the etc directory
     strcpy(dir_buf[0].d_name, "..");
     dir_buf[0].d_ino = 1;
     strcpy(dir_buf[1].d_name, ".");
@@ -74,13 +78,13 @@ void format()
     dir_buf[2].d_ino = 3;
     fseek(fd, DATASTART + BLOCKSIZE * 1, SEEK_SET);
     std::fwrite(dir_buf, 1, 3 * (DIRSIZE + 2), fd);
-    iput(inode);
+    iput(inop);
 
-    inode = iget(3); //3 password id
-    inode->di_number = 1;
-    inode->di_mode = DEFAULTMODE|DIDIR;
-    inode->di_size = BLOCKSIZE;
-    inode->di_addr[0] = 2; //block 0# is used by the password file
+    inop = iget(3); //3 password id
+    inop->di_number = 1;
+    inop->di_mode = DEFAULTMODE|DIDIR;
+    inop->di_size = BLOCKSIZE;
+    inop->di_addr[0] = 2; //block 0# is used by the password file
     for ( i = 5; i < USERNUM; i++)
     {
         pwd_table[i].p_uid = 0;
@@ -89,7 +93,7 @@ void format()
     }
     fseek(fd, DATASTART + BLOCKSIZE * 2, SEEK_SET);
     std::fwrite(pwd_table, 1, BLOCKSIZE, fd);
-    iput(inode);
+    iput(inop);
 
     //2.initialize the super block
     filsys_instance.s_isize = DINODEBLK;
