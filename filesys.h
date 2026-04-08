@@ -58,9 +58,6 @@
 //错误码
 #define DISKFULL 65535  //磁盘已满
 
-//寻址模式
-#define SEEK_SET 0  //文件头偏移
-
 
 //数据结构定义
 struct inode; //前向声明
@@ -169,8 +166,8 @@ extern int user_id;
 extern uint32_t file_block; 
 
 //函数原型声明
-extern inode * iget();
-extern void iput();
+extern inode * iget(uint32_t ino);
+extern void iput(inode * inop);
 extern unsigned int balloc();
 extern void bfree();
 extern inode * ialloc();
