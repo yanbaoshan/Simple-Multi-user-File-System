@@ -142,36 +142,31 @@ void format()
     filsys_instance.s_pinode = 0;
     filsys_instance.s_rinode = NICINOD + 4;
 
-    //初始化空闲块链
     block_buf[NICFREE - 1] = FILEBLK + 1;//FILEBLK + 1 is a flag of end
     for (i = 0; i < NICFREE - 1; i++)
     {
-        block_buf[NICFREE - 2 - i] = FILEBLK - i; //FILEBLK, FILEBLK-1, ..., FILEBLK-NICFREE+2 are the first group of free blocks
+        block_buf[NICFREE - 2 - i] = FILEBLK + 1;
     }
-    
-    fs.seekp(DATASTART + BLOCKSIZE * (FILEBLK - NICFREE - 1), std::ios::beg);
-    fs.write(reinterpret_cast<char*>(block_buf), BLOCKSIZE);
-    //初始化前面的组
+    fseek(fd, DATASTART + BLOCKSIZE * (FILEBLK - NICFREE - 1), SEEK_SET);
+    std::fwrite(block_buf, 1, BLOCKSIZE, fd);
+
     for (i = FILEBLK - NICFREE - 1; i > 2; i -= NICFREE)
     {
-        //填充当前组的空闲块
         for (j = 0; j < NICFREE; j++)
         {
-            block_buf[j] = i - j; //最后一组可能不足NICFREE-1块，剩余部分填0
+            block_buf[j] = i - j;
         }
-        block_buf[j] = i - NICFREE;
-        
-        fs.seekp(DATASTART + BLOCKSIZE * i, std::ios::beg);
-        fs.write(reinterpret_cast<char*>(block_buf), BLOCKSIZE);
+        block_buf[j] = 50;
+        fseek(fd, DATASTART + BLOCKSIZE * (i - 1), SEEK_SET);
+        std::fwrite(block_buf, 1, BLOCKSIZE, fd);
     }
 
-    j = i + NICFREE - 1; //上面循环结束时，i是最后一个组的第一个块号，j是最后一个组的结束块号
-    
+    j = i + NICFREE;
     for (i = j; i > 2; i--)
     {
-        filsys_instance.s_free[NICFREE - (j - i + 1)] = i;
+        filsys_instance.s_free[NICFREE - 1 + i - j] = i;
     }
-    filsys_instance.s_pfree = NICFREE - (j - 2);
+    filsys_instance.s_pfree = NICFREE - 1 - j + 3;
     filsys_instance.s_pinode = 0;
 
     fs.seekp(BLOCKSIZE, std::ios::beg); //超级块位于第1块
